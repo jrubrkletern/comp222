@@ -1,0 +1,204 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/* declare global var's */
+typedef int word;
+int cache_size;
+int block_size;
+int mm_size;
+int num_rows = 0; //number of rows in cache
+
+/* define structure of dynamic cache and initialize var */
+
+typedef struct node {
+int tag;
+int valid;
+word *block;
+
+} cache_type;
+cache_type *cache = NULL;
+/* define dynamic array for main memory */
+
+
+
+
+
+word *main_mem = NULL;
+
+
+/****************************************************************/
+void enterParam() /* enter params */
+{
+/* declare local var's */
+//.....
+
+
+
+/* Prompt for main memory size, cache size, block size */
+printf("Main memory?\n");
+scanf("%d", &mm_size);
+
+printf("Cache size?\n");
+scanf("%d", &cache_size);
+
+printf("Block size?\n");
+scanf("%d", &block_size);
+
+
+/* allocate and initialize main memory--value at index i = size of main memory+i*/
+main_mem = (word *)malloc(mm_size*sizeof(word));
+num_rows = cache_size/block_size;
+/*for-loop: main_mem[i] = i + mm_size*/
+for(int i = 0; i < mm_size-1; i++) {
+
+main_mem[i] = i + mm_size;
+
+}
+/* allocate memory for cache based on number of lines in cache*/
+/* initialize each tag to 0 and each block to NULL */
+cache = (cache_type *)malloc(num_rows * sizeof(cache_type));
+/*for loop from 0 to num_rows - 1, cache[i].valid = 0    cache[i].block = NULL*/
+for(int i = 0; i < num_rows-1;i++) {
+
+  cache[i].valid = 0;
+  cache[i].block = NULL;
+}
+printf("\n\n");
+  return;
+}
+
+
+/****************************************************************/
+void accessCache() /*access the cache: reads/writes*/
+{
+/* declare local var's */
+int read_write, mm_addr, ctag, cindex, coffset, base, data;
+
+
+/* Prompt for read=0/write=1 signal */
+printf("Read or write?\n");
+scanf("%d", &read_write);
+/* Prompt for main memory address to read/write & data in case of write*/
+printf("Main memory address?\n");
+scanf("%d", &mm_addr);
+
+if(read_write ==1) {
+  printf("Enter a address to write data to. \n");
+  scanf("%d", &data);
+}
+/* Translate main mem addr to cache addr fields*/
+/*cache_size is based off cindex and coffset, coffset is based of width of block_size*/
+
+ctag = mm_addr/cache_size;
+cindex = mm_addr% cache_size / block_size; //some operator and a choice of cachesize or block_size then another operator and cache_size or block_size again ex mm_addr / cache_size % block_size;
+coffset = mm_addr % block_size;
+base = (mm_addr /block_size) * block_size; //probably looks something like cindex?
+
+printf("Access result from memory address %d:\n", mm_addr);
+/* Case 1: COMPULSORY MISS--BLOCK NOT ALLOCATED */
+if(cache[cindex].valid == 0)
+{
+printf("Miss!\n");
+/* Allocate cache block based on block size */
+cache[cindex].valid = 1;
+
+cache[cindex].block = malloc(block_size*sizeof(word));
+/*set tag*/
+cache[cindex].tag = ctag;
+
+/*Transfer equivalent block of main memory to cache--one word at a time*/
+/*for_loop from 0 to/including block_size-1: cache[cindex].block[i]= main_mem[base+i]*/
+for(int i = 0; i <= block_size-1; i++) {
+
+  cache[cindex].block[i] = main_mem[base+i];
+}
+
+/* Case 2: CONFLICT MISS--NON-MATCHING TAGS */
+} else if(ctag != cache[cindex].tag) {
+/* Print message of Read/Write miss */
+printf("Read/Write miss!\n");
+/* Overwrite tag */
+cache[cindex].tag = ctag;
+/* Transfer equivalent block of main memory to cache--one word at a time */
+for(int i = 0; i <= block_size-1; i++) {
+
+  cache[cindex].block[i] = main_mem[base+i];
+}
+}
+
+/* Case 3: HIT DUE TO MATCHING TAGS */
+else if(ctag == cache[cindex].tag){
+
+  printf("Hit!\n");
+/*print message of Read/Write hit*/
+}
+
+/*transfer data*/
+if(read_write == 0) {
+
+  data = main_mem[mm_addr];
+
+} else  {
+  /*swap the above across equal sign since youll be just writing instead of reading now*/
+
+main_mem[mm_addr] = data;
+
+}
+/*print corresponding ctag, cindex, coffset, data & transfer data */
+
+
+printf("Tag:%d\n", ctag);
+printf("Block:%d\n", cindex);
+printf("Word:%d\n", coffset);
+
+printf("Data:%d\n", data);
+
+
+
+printf("\n\n");
+  return;
+}
+
+/****************************************************************/
+void freeCache() /*free cache*/
+{
+  for(int i=0; i < num_rows; i++) {
+    if(cache[i].block != NULL) {
+      free(cache[i].block);
+    }
+
+  }
+  if(cache!= NULL){
+    free(cache);
+  }
+/* declare local var's */
+/*  prompt for block to write contents of */
+/* print contents of each word of requested block */
+
+return;
+}
+
+/****************************************************************/
+int main()
+{
+/* declare local var's */
+/* until user chooses to quit, print menu,
+select choice via switch statement and call appropriate function*/
+int choice = 0;
+while(choice != 3) {
+scanf("%d", &choice);
+
+switch(choice) {
+  case 1: enterParam(); break;
+  case 2: accessCache(); break;
+  //case 3: freeCache(); break;
+
+  default:
+  break;
+
+
+  }
+}
+/* until program exits, print menu, select choice via switch statement and call appropriate function*/
+  return 1;
+}
